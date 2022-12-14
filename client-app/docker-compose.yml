@@ -1,0 +1,37 @@
+version: '3.9'
+services:
+  rabbitmq:
+    build: ./rabbitmq
+    hostname: rabbitmq
+    container_name: 'rabbitmq'
+    # environment:
+    #   - RABBITMQ_DEFAULT_USER=admin
+    #   - RABBITMQ_DEFAULT_PASS=pass
+    command: rabbitmq-server
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rabbitmq_nodejs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  workerapp:
+    build: ./workerapp
+    container_name: workerapp
+    ports:
+      - "4002:4002"
+    networks:
+      - rabbitmq_nodejs
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+        
+    # volumes:
+    #   - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    #   - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+networks:
+  rabbitmq_nodejs:
+    driver: bridge
